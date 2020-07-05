@@ -14,9 +14,11 @@ open_time_str = open_time.strftime("%H:%M:%S")
 
 bot = telebot.TeleBot(TOKEN)
 # job = schedule.every().day.at(open_time_str)
-job = schedule.every(1).minutes
+job = schedule.every(1).days
 # job = schedule.every(5).seconds
 is_run = False
+
+is_first_time = True
 
 server = Flask(__name__)
 
@@ -31,6 +33,7 @@ def help_handle(message):
 @bot.message_handler(commands=['start'])
 def start_handle(message):
     global is_run
+    global is_first_time
     if not is_run:
         is_run = True
 
@@ -42,16 +45,33 @@ def start_handle(message):
                allows_multiple_answers=True,
                close_date=close_time)
 
+        if is_first_time:
+            is_first_time = False
+            bot.send_poll(chat_id=message.chat.id,
+                          question="Lets roll today!",
+                          options=["20:00", "21:00", "another time", "not today"],
+                          is_anonymous=False,
+                          allows_multiple_answers=True,
+                          close_date=close_time)
+
         while is_run:
             schedule.run_pending()
+
+    else:
+        bot.send_message(message.chat.id, "Job is already scheduled")
 
 
 @bot.message_handler(commands=['stop'])
 def stop_handle(message):
     global is_run
+    global is_first_time
     if is_run:
         schedule.cancel_job(job)
         is_run = False
+        is_first_time = True
+
+    else:
+        bot.send_message(message.chat.id, "Job is not scheduled")
 
 
 @bot.message_handler(commands=['status'])

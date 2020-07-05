@@ -13,7 +13,8 @@ close_time = open_time.replace(hour=open_time.hour + 5)
 open_time_str = open_time.strftime("%H:%M:%S")
 
 bot = telebot.TeleBot(TOKEN)
-job = schedule.every().day.at(open_time_str)
+# job = schedule.every().day.at(open_time_str)
+job = schedule.every(1).minutes
 # job = schedule.every(5).seconds
 is_run = False
 
@@ -33,7 +34,8 @@ def start_handle(message):
     if not is_run:
         is_run = True
 
-        job.do(bot.send_poll, chat_id=message.chat.id,
+        job.do(bot.send_poll,
+               chat_id=message.chat.id,
                question="Lets roll today!",
                options=["20:00", "21:00", "another time", "not today"],
                is_anonymous=False,
@@ -50,6 +52,12 @@ def stop_handle(message):
     if is_run:
         schedule.cancel_job(job)
         is_run = False
+
+
+@bot.message_handler(commands=['status'])
+def status_handle(message):
+    global is_run
+    bot.send_message(message.chat.id, f"Job is schedule: {is_run}")
 
 
 # bot.polling(none_stop=True)

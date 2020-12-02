@@ -29,6 +29,8 @@ def analyze_text(text):
     ).execute()
 
     tokens = response['tokens']
+    del tokens[0:2]
+
     result = "Number of words: " + str(len(tokens)) + "\n"
     for token in tokens:
         result += str(token['text']['content']) + " - is " + str(token['partOfSpeech']['tag'])
